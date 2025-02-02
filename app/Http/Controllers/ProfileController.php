@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,33 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit');
+    }
+
+    /**
+     * Update the profile photo.
+     */
+
+    public function updatePhoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+        ]);
+
+
+        $path = Storage::disk('public')->put('photos', $request->file('profile_photo'));
+        $url = Storage::url($path);
+
+        $previousPhoto = $request->user()->photo_url;
+
+        $request->user()->update([
+            'photo_url' => $url,
+        ]);
+
+        if ($previousPhoto) {
+            Storage::disk('public')->delete(str_replace('/storage', '', $previousPhoto));
+        }
+
+        return Redirect::back()->with('success', 'Your profile photo has been updated!');
     }
 
     /**

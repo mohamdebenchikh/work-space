@@ -29,11 +29,35 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = null;
+        $currentTeam = null;
+        $teams = [];
+        $unreadNotifications = [];
+
+        if ($request->user()) {
+            $unreadNotifications = $request->user()->unreadNotifications;
+            $user = $request->user();
+            $currentTeam = $request->user()->currentTeam;
+            $currentTeam->currentUserRole = $request->user()->teams()->find($request->user()->current_team_id)->pivot->role ?? null;
+            $teams = $request->user()->teams;
+
+            $teams->map(function ($team) use ($request) {
+                $team->currentUserRole = $request->user()->teams()->find($team->id)->pivot->role ?? null;
+            });
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'currentTeam' => $currentTeam,
+                'teams' => $teams,
+                'unreadNotifications' => $unreadNotifications
             ],
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ]
         ];
     }
 }
