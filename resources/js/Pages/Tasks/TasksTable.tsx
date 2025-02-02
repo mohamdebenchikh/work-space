@@ -14,7 +14,6 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { useState } from "react";
 
 
-
 export default function ({ tasks }: { tasks: Task[] }) {
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
